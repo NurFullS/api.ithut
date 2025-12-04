@@ -30,7 +30,14 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String token = null;
 
-        if (request.getCookies() != null) {
+        // Берём токен из заголовка Authorization
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // Или из куки
+        if (token == null && request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("jwt".equals(cookie.getName())) {
                     token = cookie.getValue();
@@ -38,6 +45,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
+        // Проверяем токен
         if (token != null && jwtUtil.validateToken(token)) {
             String username = jwtUtil.extractUsername(token);
 
@@ -45,7 +53,6 @@ public class JwtFilter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(username, null, Collections.emptyList());
 
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 

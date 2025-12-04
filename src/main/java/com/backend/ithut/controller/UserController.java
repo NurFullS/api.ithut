@@ -1,9 +1,12 @@
 package com.backend.ithut.controller;
 
+import com.backend.ithut.config.JwtUtil;
 import com.backend.ithut.entity.User;
 import com.backend.ithut.service.R2Service;
 import com.backend.ithut.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +33,9 @@ public class UserController {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    JwtUtil jwtUtil;
 
     @GetMapping
     public ResponseEntity<?> getAllUsers() {
@@ -82,7 +88,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginUser) {
+    public ResponseEntity<?> login(@RequestBody User loginUser, HttpServletResponse response) {
         Optional<User> optionalUser = userService.getUserByEmail(loginUser.getEmail());
 
         if (optionalUser.isEmpty()) {
@@ -95,6 +101,17 @@ public class UserController {
             return ResponseEntity.status(401).body("Неправильный пароль.");
         }
 
+        // 1. Генерируем JWT
+        String token = jwtUtil.generateToken(user.getEmail());
+
+        // 2. Устанавливаем HttpOnly cookie
+        Cookie cookie = new Cookie("jwt", token);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge((int) (jwtUtil.EXPIRATION_MS / 1000));
+        response.addCookie(cookie);
+
+        // 3. Возвращаем данные пользователя и токен (опционально)
         return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
             put("id", user.getId());
             put("email", user.getEmail());
@@ -102,6 +119,7 @@ public class UserController {
             put("avatarUrl", user.getAvatarUrl());
         }});
     }
+
 
     @GetMapping("/get-username/{username}")
     public ResponseEntity<?> getUsername(@PathVariable String username) {
@@ -171,5 +189,4 @@ public class UserController {
             put("avatarUrl", avatarUrl);
         }});
     }
-
 }
