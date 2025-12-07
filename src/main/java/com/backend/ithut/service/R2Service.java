@@ -28,6 +28,6 @@ public class R2Service {
                 RequestBody.fromInputStream(file.getInputStream(), file.getSize())
         );
 
-        return publicEndpoint + key; // публичный URL для браузера
+        return publicEndpoint + key;
     }
 }

@@ -42,6 +42,31 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> userMe(@CookieValue(name = "jwt", required = false) String token) {
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.status(401).body("Пользователь не авторизован");
+        }
+
+        try {
+            String email = jwtUtil.extractUsername(token);
+
+            User user = userService.getUserByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+            return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
+                put("id", user.getId());
+                put("email", user.getEmail());
+                put("username", user.getUsername());
+                put("surname", user.getSurname());
+                put("avatarUrl", user.getAvatarUrl());
+            }});
+
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Невалидный токен");
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable Long id) {
         return userService.getUserById(id)
@@ -101,40 +126,39 @@ public class UserController {
             return ResponseEntity.status(401).body("Неправильный пароль.");
         }
 
-        // 1. Генерируем JWT
         String token = jwtUtil.generateToken(user.getEmail());
 
-        // 2. Устанавливаем HttpOnly cookie
         Cookie cookie = new Cookie("jwt", token);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge((int) (jwtUtil.EXPIRATION_MS / 1000));
         response.addCookie(cookie);
 
-        // 3. Возвращаем данные пользователя и токен (опционально)
         return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
             put("id", user.getId());
             put("email", user.getEmail());
             put("username", user.getUsername());
+            put("surname", user.getSurname());
             put("avatarUrl", user.getAvatarUrl());
         }});
     }
 
 
-    @GetMapping("/get-username/{username}")
-    public ResponseEntity<?> getUsername(@PathVariable String username) {
-        Optional<User> optionalGetUsername = userService.getUserByUsername(username);
+    @GetMapping("/get-email/{email}")
+    public ResponseEntity<?> getUsername(@PathVariable String email) {
+        Optional<User> optionalGetEmail = userService.getUserByEmail(email);
 
-        if (optionalGetUsername.isEmpty()) {
+        if (optionalGetEmail.isEmpty()) {
             return ResponseEntity.status(401).body("Такого пользовователья нету.");
         }
 
-        User user = optionalGetUsername.get();
+        User user = optionalGetEmail.get();
 
         return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
             put("id", user.getId());
             put("email", user.getEmail());
             put("username", user.getUsername());
+            put("surname", user.getSurname());
             put("avatarUrl", user.getAvatarUrl());
         }});
     }

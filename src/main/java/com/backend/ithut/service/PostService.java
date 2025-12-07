@@ -20,6 +20,10 @@ public class PostService {
         return postRepository.findAll();
     }
 
+    public List<Post> getPostsByTitle(String title) {
+        return postRepository.findByTitleContainingIgnoreCase(title);
+    }
+
     public Optional<Post> getPostById(Long id) {
         return postRepository.findById(id);
     }

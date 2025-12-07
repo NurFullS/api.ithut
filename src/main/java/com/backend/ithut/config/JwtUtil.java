@@ -20,7 +20,6 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes());
     }
 
-    // Генерация токена с уникальным идентификатором (jti)
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)

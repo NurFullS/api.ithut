@@ -16,13 +16,10 @@ public class R2Config {
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
-                // R2 API endpoint (не публичный)
                 .endpointOverride(URI.create("https://79a8e357c58a264c4a73f3ee6afbce0c.r2.cloudflarestorage.com"))
 
-                // Регистрируем фиктивный регион
                 .region(Region.US_EAST_1)
 
-                // Указываем ключ и секрет
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(
                                 "507b9f5d7eef06ecb41674004fb55121",
@@ -30,7 +27,6 @@ public class R2Config {
                         )
                 ))
 
-                // Включаем path-style доступ (важно для R2)
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(true)
                         .build())

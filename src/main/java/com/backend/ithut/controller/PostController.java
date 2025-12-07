@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +46,19 @@ public class PostController {
         return ResponseEntity.ok(allPosts);
     }
 
+    @GetMapping("/get-post/{title}")
+    public ResponseEntity<?> getPost(@PathVariable String title) {
+        List<Post> posts = postService.getPostsByTitle(title);
+        List<Post> allPosts = postService.getAllPosts();
+
+        if (posts.isEmpty()) {
+            return ResponseEntity.ok(allPosts);
+        }
+
+        return ResponseEntity.ok(posts);
+    }
+
+
     @PostMapping("/create")
     public ResponseEntity<?> createPost(
             @RequestPart("data") String data,
@@ -52,14 +66,12 @@ public class PostController {
             HttpServletRequest request
     ) throws IOException, NoSuchAlgorithmException {
 
-        // 1. Берем токен из заголовка Authorization
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body("Пользователь не авторизован");
         }
         String token = authHeader.substring(7);
 
-        // 2. Получаем email пользователя из токена
         String email;
         try {
             email = jwtUtil.extractUsername(token);
@@ -67,15 +79,12 @@ public class PostController {
             return ResponseEntity.status(401).body("Невалидный токен");
         }
 
-        // 3. Ищем пользователя в БД
         User user = userService.getUserByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
 
-        // 4. Создаём объект поста
         Post post = new ObjectMapper().readValue(data, Post.class);
         post.setUser(user);
 
-        // 5. Обработка файла
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         int dotIndex = originalFilename.lastIndexOf(".");
@@ -87,12 +96,10 @@ public class PostController {
 
         String key = "posts/" + System.currentTimeMillis() + "_" + hash + extension;
 
-        // 6. Загружаем файл в R2
         String postUrl = r2Service.uploadFile("filesithut", key, file);
         post.setFileName(originalFilename);
         post.setPostUrl(postUrl);
 
-        // 7. Сохраняем пост
         Post savedPost = postService.savePost(post);
 
         return ResponseEntity.ok(savedPost);
@@ -114,7 +121,6 @@ public class PostController {
         existingPost.setDescription(updatedPost.getDescription());
         existingPost.setCategory(updatedPost.getCategory());
 
-        // Если пришел новый файл, загружаем его
         if (file != null && !file.isEmpty()) {
             String originalFilename = file.getOriginalFilename();
             String extension = "";
