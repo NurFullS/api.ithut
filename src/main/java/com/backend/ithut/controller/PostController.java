@@ -7,6 +7,7 @@ import com.backend.ithut.service.PostService;
 import com.backend.ithut.service.R2Service;
 import com.backend.ithut.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -66,11 +67,18 @@ public class PostController {
             HttpServletRequest request
     ) throws IOException, NoSuchAlgorithmException {
 
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        Cookie[] cookies = request.getCookies();
+        String token = null;
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwt".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                }
+            }
+        }
+        if (token == null) {
             return ResponseEntity.status(401).body("Пользователь не авторизован");
         }
-        String token = authHeader.substring(7);
 
         String email;
         try {

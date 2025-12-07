@@ -45,7 +45,7 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> userMe(@CookieValue(name = "jwt", required = false) String token) {
         if (token == null || token.isEmpty()) {
-            return ResponseEntity.status(401).body("Пользователь не авторизован");
+            return ResponseEntity.ok("Пользователь не авторизован");
         }
 
         try {
