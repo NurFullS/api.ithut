@@ -2,6 +2,7 @@ package com.backend.ithut.controller;
 
 import com.backend.ithut.config.JwtUtil;
 import com.backend.ithut.entity.User;
+import com.backend.ithut.service.PostService;
 import com.backend.ithut.service.R2Service;
 import com.backend.ithut.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +28,9 @@ public class UserController {
 
     @Autowired
     R2Service r2Service;
+
+    @Autowired
+    PostService postService;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -160,6 +164,7 @@ public class UserController {
             put("username", user.getUsername());
             put("surname", user.getSurname());
             put("avatarUrl", user.getAvatarUrl());
+            put("title", postService.getAllPosts());
         }});
     }
 

@@ -20,6 +20,14 @@ public class PostService {
         return postRepository.findAll();
     }
 
+    public List<Post> getPostsByUserId(Long userId) {
+        return postRepository.findByUserId(userId);
+    }
+
+    public List<Post> findPostsByUserEmail(String email) {
+        return postRepository.findByUserEmail(email);
+    }
+
     public List<Post> getPostsByTitle(String title) {
         return postRepository.findByTitleContainingIgnoreCase(title);
     }

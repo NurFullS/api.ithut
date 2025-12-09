@@ -59,6 +59,37 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
 
+    @GetMapping("/my-posts")
+    public ResponseEntity<?> myPosts(HttpServletRequest request) {
+
+        Cookie[] cookies = request.getCookies();
+        String token = null;
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwt".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                }
+            }
+        }
+
+        if (token == null) {
+            return ResponseEntity.status(401).body("Токен не найден!");
+        }
+
+        String email;
+        try {
+            email = jwtUtil.extractUsername(token);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Невалидный токен!");
+        }
+
+        User user = userService.getUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Пользовователь не найден"));
+
+        List<Post> posts = postService.getPostsByUserId(user.getId());
+
+        return ResponseEntity.ok(posts);
+    }
 
     @PostMapping("/create")
     public ResponseEntity<?> createPost(
