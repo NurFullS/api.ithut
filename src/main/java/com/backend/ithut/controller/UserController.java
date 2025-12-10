@@ -169,6 +169,36 @@ public class UserController {
         }});
     }
 
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long id,
+            @RequestPart("data") String data,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar
+    ) throws Exception {
+
+        User user = userService.getUserById(id)
+                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        User updatedData = objectMapper.readValue(data, User.class);
+
+        if (updatedData.getUsername() != null) user.setUsername(updatedData.getUsername());
+        if (updatedData.getSurname() != null) user.setSurname(updatedData.getSurname());
+        if (updatedData.getEmail() != null) user.setEmail(updatedData.getEmail());
+        if (updatedData.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(updatedData.getPassword()));
+        }
+
+        if (avatar != null) {
+            String avatarUrl = uploadAvatar(avatar);
+            user.setAvatarUrl(avatarUrl);
+            user.setFileName(avatar.getOriginalFilename());
+        }
+
+        userService.saveUser(user);
+
+        return ResponseEntity.ok(toUserDTO(user));
+    }
+
     private HashMap<String, Object> toUserDTO(User user) {
         return new HashMap<>() {{
             put("id", user.getId());

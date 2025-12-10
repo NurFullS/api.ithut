@@ -26,6 +26,8 @@ public class User {
     private String fileName;
     private String avatarUrl;
 
+    private Boolean verified;
+
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
 
