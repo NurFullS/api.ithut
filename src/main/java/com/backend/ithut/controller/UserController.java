@@ -19,6 +19,7 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -168,6 +169,13 @@ public class UserController {
             put("avatarUrl", avatarUrl);
         }});
     }
+
+    @GetMapping("/by-ids")
+    public ResponseEntity<List<User>> getUsersByIds(@RequestParam List<Long> ids) {
+        List<User> users = userService.getUsersByIds(ids);
+        return ResponseEntity.ok(users);
+    }
+
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateUser(
